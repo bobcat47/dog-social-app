@@ -1,0 +1,45 @@
+:root {
+  /* Premium Palette */
+  --primary: #FF6B6B; /* Coral Red */
+  --primary-hover: #FF5252;
+  --secondary: #4ECDC4; /* Mint Teal */
+  --dark: #2D3436; /* Charcoal */
+  --light: #F7F9FC; /* Cloud White */
+  --white: #FFFFFF;
+  --gray: #DFE6E9;
+  --text-muted: #636E72;
+  
+  /* Spacing & Layout */
+  --radius: 16px;
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.05);
+  --shadow-md: 0 8px 16px rgba(0,0,0,0.1);
+  --shadow-lg: 0 16px 32px rgba(0,0,0,0.1);
+  
+  /* Typography */
+  --font-main: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-main);
+  background-color: var(--light);
+  color: var(--dark);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+h1, h2, h3, h4 {
+  margin: 0;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  font-family: inherit;
+}

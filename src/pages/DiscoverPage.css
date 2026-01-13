@@ -1,0 +1,58 @@
+.discover-page {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.card-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 2rem;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 2rem;
+    justify-content: center;
+    align-items: center;
+}
+
+.action-btn {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--white);
+    box-shadow: var(--shadow-md);
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    cursor: pointer;
+}
+
+.action-btn:active {
+    transform: scale(0.9);
+}
+
+.action-btn.pass {
+    color: #FF7675;
+    /* Soft Red */
+}
+
+.action-btn.like {
+    color: #2ED573;
+    /* Success Green */
+}
+
+.action-btn.pass:hover {
+    background-color: #FFF0F0;
+}
+
+.action-btn.like:hover {
+    background-color: #F0FFF4;
+}

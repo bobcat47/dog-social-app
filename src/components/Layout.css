@@ -1,0 +1,13 @@
+.layout {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background-color: var(--light);
+}
+
+.main-content {
+    flex: 1;
+    overflow-y: auto;
+    padding-bottom: calc(80px + env(safe-area-inset-bottom));
+    /* Space for Navbar */
+}
