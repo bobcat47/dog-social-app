@@ -1,0 +1,55 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper function to check if user owns the document
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+    
+    // User profiles in 'users' collection (legacy)
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner(userId);
+    }
+    
+    // Dog profiles in 'profiles' collection
+    match /profiles/{profileId} {
+      allow read: if isAuthenticated();
+      // Only allow writing to own profile or bot profiles (for seeding)
+      allow write: if isOwner(profileId) || resource == null;
+    }
+    
+    // Swipes collection
+    match /swipes/{swipeId} {
+      allow read: if isAuthenticated();
+      // Only allow creating swipes where the user is the swiper
+      allow create: if isAuthenticated() && 
+        request.resource.data.swiperId == request.auth.uid;
+      allow update, delete: if false;
+    }
+    
+    // Matches collection
+    match /matches/{matchId} {
+      // Allow read if user is part of the match
+      allow read: if isAuthenticated() && 
+        request.auth.uid in resource.data.users;
+      // Allow create/update for matching flow
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && 
+        request.auth.uid in resource.data.users;
+    }
+    
+    // Chats collection (messages subcollection)
+    match /chats/{matchId}/messages/{messageId} {
+      // For now, allow broad access for authenticated users
+      // In production, check if user is part of the match
+      allow read, write: if isAuthenticated();
+    }
+  }
+}

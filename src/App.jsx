@@ -16,17 +16,36 @@ const AuthenticatedApp = () => {
   const { currentUser, userProfile, loading } = useAuth();
   const [activeTab, setActiveTab] = useState('discover');
   const [authView, setAuthView] = useState('login'); // 'login' or 'signup'
+  const [selectedMatch, setSelectedMatch] = useState(null);
 
   useEffect(() => {
     // Request notification permissions on app start
     NotificationService.requestPermissions();
   }, []);
 
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    // Clear selected match when leaving chat
+    if (tab !== 'chat') {
+      setSelectedMatch(null);
+    }
+  };
+
   const renderContent = () => {
     switch (activeTab) {
       case 'discover': return <DiscoverPage />;
-      case 'matches': return <MatchesPage setActiveTab={setActiveTab} />;
-      case 'chat': return <ChatPage onBack={setActiveTab} />;
+      case 'matches': return (
+        <MatchesPage
+          setActiveTab={handleTabChange}
+          setSelectedMatch={setSelectedMatch}
+        />
+      );
+      case 'chat': return (
+        <ChatPage
+          onBack={handleTabChange}
+          selectedMatch={selectedMatch}
+        />
+      );
       case 'notifications': return <NotificationsPage />;
       case 'profile': return <ProfilePage />;
       default: return <DiscoverPage />;
@@ -57,7 +76,7 @@ const AuthenticatedApp = () => {
 
   // 3. Logged In & Profile Exists (Main App)
   return (
-    <Layout activeTab={activeTab} onTabChange={setActiveTab}>
+    <Layout activeTab={activeTab} onTabChange={handleTabChange}>
       <div style={{ height: '100%' }}>
         {renderContent()}
       </div>

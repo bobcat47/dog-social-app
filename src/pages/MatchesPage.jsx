@@ -1,49 +1,97 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import { matchService } from '../services/matchService';
+import { profileService } from '../services/profileService';
+import { Loader } from 'lucide-react';
 import './MatchesPage.css';
 
-const MOCK_MATCHES = [
-    { id: 1, name: 'Luna', image: 'https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?auto=format&fit=crop&q=80&w=200', lastMessage: 'Bark bark!' },
-    { id: 3, name: 'Rocky', image: 'https://images.unsplash.com/photo-1589941013453-ec89f33b5e95?auto=format&fit=crop&q=80&w=200', lastMessage: 'See you at the park?' },
-    { id: 4, name: 'Bella', image: 'https://images.unsplash.com/photo-1552053831-71594a27632d?auto=format&fit=crop&q=80&w=200', lastMessage: 'New match! Say hello.' },
-];
+const MatchesPage = ({ setActiveTab, setSelectedMatch }) => {
+    const { currentUser } = useAuth();
+    const [matches, setMatches] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-import NotificationService from '../services/NotificationService';
+    useEffect(() => {
+        if (!currentUser) return;
 
-const MatchesPage = ({ setActiveTab }) => {
-    const handleSimulateMatch = async () => {
-        // Pick a random dog name
-        const names = ['Barnaby', 'Luna', 'Rocky', 'Coco', 'Max'];
-        const randomName = names[Math.floor(Math.random() * names.length)];
+        // Subscribe to real-time match updates
+        const unsubscribe = matchService.subscribeToMatches(
+            currentUser.uid,
+            async (matchList) => {
+                // Enrich matches with partner profiles
+                const enrichedMatches = await Promise.all(
+                    matchList.map(async (match) => {
+                        const partnerId = match.users.find(id => id !== currentUser.uid);
+                        const partner = await profileService.getProfile(partnerId);
+                        return { ...match, partner };
+                    })
+                );
 
-        await NotificationService.schedule(
-            'New Match! 🎉',
-            `You matched with ${randomName}. Say hello!`,
-            'match',
-            { user: randomName }
+                // Sort by most recent message
+                enrichedMatches.sort((a, b) => {
+                    if (!a.lastMessageAt) return 1;
+                    if (!b.lastMessageAt) return -1;
+                    return new Date(b.lastMessageAt) - new Date(a.lastMessageAt);
+                });
+
+                setMatches(enrichedMatches);
+                setLoading(false);
+            }
         );
-        alert('Notification triggered! Check your device notification center or the Activity tab.');
+
+        return () => unsubscribe();
+    }, [currentUser]);
+
+    const handleOpenChat = (match) => {
+        if (setSelectedMatch) {
+            setSelectedMatch(match);
+        }
+        setActiveTab('chat');
     };
+
+    if (loading) {
+        return (
+            <div className="matches-page loading">
+                <Loader size={48} className="spinner" />
+                <p>Loading matches...</p>
+            </div>
+        );
+    }
+
+    if (matches.length === 0) {
+        return (
+            <div className="matches-page">
+                <header className="page-header">
+                    <h1>Matches</h1>
+                    <p>Your furry friends</p>
+                </header>
+                <div className="empty-matches">
+                    <h3>🐾 No matches yet</h3>
+                    <p>Keep swiping to find your perfect playmate!</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="matches-page">
             <header className="page-header">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div>
-                        <h1>Matches</h1>
-                        <p>Your furry friends</p>
-                    </div>
-                    <button onClick={handleSimulateMatch} style={{ padding: '8px', fontSize: '12px', background: '#eee', border: 'none', borderRadius: '8px' }}>
-                        Simulate Match
-                    </button>
-                </div>
+                <h1>Matches</h1>
+                <p>Your furry friends</p>
             </header>
 
             <div className="matches-grid">
                 <div className="matches-row">
-                    {MOCK_MATCHES.map(dog => (
-                        <div key={dog.id} className="match-circle" onClick={() => setActiveTab('chat')}>
-                            <img src={dog.image} alt={dog.name} />
-                            <span>{dog.name}</span>
+                    {matches.map(match => (
+                        <div
+                            key={match.id}
+                            className="match-circle"
+                            onClick={() => handleOpenChat(match)}
+                        >
+                            <img
+                                src={match.partner?.image || 'https://via.placeholder.com/100'}
+                                alt={match.partner?.name || 'Match'}
+                            />
+                            <span>{match.partner?.name || 'Unknown'}</span>
                         </div>
                     ))}
                 </div>
@@ -52,12 +100,20 @@ const MatchesPage = ({ setActiveTab }) => {
             <div className="messages-section">
                 <h3>Messages</h3>
                 <div className="message-list">
-                    {MOCK_MATCHES.map(dog => (
-                        <div key={dog.id} className="message-item" onClick={() => setActiveTab('chat')}>
-                            <img src={dog.image} alt={dog.name} className="avatar-sm" />
+                    {matches.map(match => (
+                        <div
+                            key={match.id}
+                            className="message-item"
+                            onClick={() => handleOpenChat(match)}
+                        >
+                            <img
+                                src={match.partner?.image || 'https://via.placeholder.com/50'}
+                                alt={match.partner?.name || 'Match'}
+                                className="avatar-sm"
+                            />
                             <div className="message-info">
-                                <h4>{dog.name}</h4>
-                                <p>{dog.lastMessage}</p>
+                                <h4>{match.partner?.name || 'Unknown'}</h4>
+                                <p>{match.lastMessage || 'New match! Say hello 👋'}</p>
                             </div>
                         </div>
                     ))}
